@@ -1,4 +1,5 @@
 
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -8,9 +9,21 @@ spring:
 
 # 1000 * 60 * 60 * 24 * 3 三天
 token:
+  JWT_TTL: 259200000
+  JWT_KEY: f4e2e52034348f86b67cde581cef9eb5
   expireTime: 259200000
   secretKey: f4e2e52034348f86b67cde581cef9eb5
 # 生产环境务必修改此配置，否则无法保证token安全性
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator #配置端点访问前缀
+      exposure:
+        include: '*' #暴露所有端点
+
+
+
 
 mybatis-plus:
   type-aliases-package: com.duan.atripic.entity
@@ -18,3 +31,5 @@ mybatis-plus:
   configuration:
     # 输出到日志
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+server:
+  port: 8888
