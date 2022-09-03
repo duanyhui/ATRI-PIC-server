@@ -28,6 +28,17 @@ public class LoginUser implements UserDetails {
 //    }
 
 
+//存储SpringSecurity所需要的权限信息的集合
+    /**
+     * 注解防止出现fastjson反序列化失败autoType is not support
+     */
+    @JSONField(serialize = false)
+    private List<GrantedAuthority> authorities;
+
+    public LoginUser(Admin admin) {
+        this.admin = admin;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         //把admin对象中的权限信息封装成SpringSecurity需要的SimpleGrantedAuthority对象
@@ -35,7 +46,8 @@ public class LoginUser implements UserDetails {
         List<GrantedAuthority> RoleList= new ArrayList<>();
         SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(admin.getRole());
         RoleList.add(simpleGrantedAuthority);
-        return RoleList;
+        authorities = RoleList;
+        return authorities;
 //        List<String> permissions = Collections.singletonList(admin.getRole());
 //        List<GrantedAuthority> NewList= new ArrayList<>();
 //        for (String role : Collections.singletonList(admin.getRole())) {

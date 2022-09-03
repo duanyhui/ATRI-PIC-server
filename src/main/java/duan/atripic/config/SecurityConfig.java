@@ -2,6 +2,8 @@ package duan.atripic.config;
 
 import afu.org.checkerframework.checker.units.qual.A;
 import duan.atripic.filter.JwtAuthenticationTokenFilter;
+import duan.atripic.handler.AccessDeniedHandlerImpl;
+//import duan.atripic.handler.AuthenticationEntryPointImpl;
 import org.checkerframework.checker.units.qual.C;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +30,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
 
+//    @Autowired
+//    private AuthenticationEntryPointImpl authenticationEntryPoint;
+
+    @Autowired
+    private AccessDeniedHandlerImpl accessDeniedHandler;
 
     /**
      * 重写AuthenticationManager，实现自定义认证
@@ -49,7 +56,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 // 对于登录接口 允许匿名访问
                 .antMatchers("/user/login").anonymous()
-                // 主页允许所有访问
+
+                .antMatchers("/root/**").hasRole("ROOT")
+                .antMatchers("/user/**").hasAnyRole("USER","ROOT","STAFF")
+                // 主页允许所有人访问
                 .antMatchers("/home/*","/actuator/*").permitAll()
 //                .antMatchers("/testCors").hasAuthority("system:dept:list222")
                 // 除上面外的所有请求全部需要鉴权认证
@@ -59,13 +69,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // UserNamePasswordAuthenticationFilter（验证密码）过滤器之前
         http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 //
-//        //配置异常处理器
-//        http.exceptionHandling()
-//                //配置认证失败处理器
+        //配置异常处理器
+        http.exceptionHandling()
+                //配置认证失败处理器
 //                .authenticationEntryPoint(authenticationEntryPoint)
-//                .accessDeniedHandler(accessDeniedHandler);
+                .accessDeniedHandler(accessDeniedHandler);
 //
-//        //允许跨域
-//        http.cors();
+        //允许跨域
+        http.cors();
     }
 }

@@ -1,15 +1,18 @@
 package duan.atripic.filter;
 
 import duan.atripic.entity.LoginUser;
+import duan.atripic.exception.RedisException;
 import duan.atripic.utils.JwtUtil;
 import duan.atripic.utils.RedisCache;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,7 +31,9 @@ import java.util.Objects;
  */
 @Component
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
-
+    @Autowired
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver handlerExceptionResolver;
 
     @Autowired
     private RedisCache redisCache;
@@ -50,23 +55,34 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             Claims claims = JwtUtil.parseJWT(token);
             uid = claims.getSubject();
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("token无效");
+            //TODO 打印日志
+//            e.printStackTrace();
+            logger.error(e.getMessage());
+            //交给全局异常处理之后直接return出去不进行接下来的操作
+            handlerExceptionResolver.resolveException(request, response, null, e);
+            return;
+//
         }
 
         //从redis中获取用户信息
         String redisKey = uid;
         LoginUser loginUser = redisCache.getCacheObject(redisKey);
         if(Objects.isNull(loginUser)){
-            throw new RuntimeException("redis中没有用户信息");
+            RedisException e = new RedisException("token失效，请重新登录");
+            logger.error(e.getMessage());
+            handlerExceptionResolver.resolveException(request, response, null, e) ;
+            return;
         }
 
         //把用户信息放入Holders中，以便后续使用
-        UsernamePasswordAuthenticationToken authenticationToken =                //要获取权限信息放入authorities中
-                new UsernamePasswordAuthenticationToken(loginUser,null,null);
+        UsernamePasswordAuthenticationToken authenticationToken =                //TODO 要获取权限信息放入authorities中
+                new UsernamePasswordAuthenticationToken(loginUser,null,loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         //放行
         filterChain.doFilter(request, response);
     }
+
+
+
 }

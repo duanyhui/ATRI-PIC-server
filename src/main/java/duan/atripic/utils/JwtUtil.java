@@ -1,9 +1,6 @@
 package duan.atripic.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import springfox.documentation.spring.web.json.Json;
@@ -149,10 +146,20 @@ public class JwtUtil {
      */
     public static Claims parseJWT(String jwt) throws Exception {
         SecretKey secretKey = generalKey();
-        return Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(jwt)
-                .getBody();
+        try {
+
+
+            return Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(jwt)
+                    .getBody();
+        }
+        catch (ExpiredJwtException e){
+            throw new Exception("token已过期");
+        }
+        catch (Exception e){
+            throw new Exception("token解析失败");
+        }
     }
 
 

@@ -36,9 +36,9 @@ public class Result implements Serializable { //序列化
         return fail(400,msg,null);
     }
     //失败
-    public static Result fail(String msg,Object data){
+    public static Result fail(int Code,String msg){
 
-        return fail(400,msg,data);
+        return fail(Code,msg,null);
     }
     //失败
     public static Result fail(int code,String msg,Object data){
